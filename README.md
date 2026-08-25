@@ -41,7 +41,7 @@ Total: 253.45
 ```bash
 git clone https://github.com/ChrisMantelos/expense-tracker-pandas.git
 cd expense-tracker-pandas
-pip install -r requirements.txt
+pip install pandas
 ```
 
 ## Usage
