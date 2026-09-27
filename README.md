@@ -2,20 +2,58 @@
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Pandas](https://img.shields.io/badge/data-Pandas-150458)
+![Tests](https://img.shields.io/badge/tests-pytest-0A9EDC)
 
-A small command-line tool that reads a CSV of personal expenses and reports
-how much you spent per category. No dashboard, no database - just a fast
-way to see where the money went.
+A command-line tool that reads a CSV of personal expenses and reports
+totals by category and by month, with an optional chart.
+
+## Sample chart output
+
+![Expenses by category](docs_sample_chart.png)
 
 ## Why I built this
 
-I wanted a five-second answer to "how much did I spend on X this month"
-without opening a spreadsheet and building a pivot table every time. This
-script does that in one command.
+I wanted a fast answer to "how much did I spend on X this month" without
+opening a spreadsheet and building a pivot table every time.
 
-## Example
+## Features
 
-Given a CSV like:
+- Category totals, sorted from highest to lowest spend
+- Monthly breakdown (skipped gracefully if the file has no usable Date column)
+- Optional bar chart saved as a PNG (`--chart` flag)
+- Takes any CSV path as an argument - not locked to one hardcoded filename
+- Clear error messages for a missing file, an empty file, or missing required columns
+
+## Installation
+
+```bash
+git clone https://github.com/ChrisMantelos/expense-tracker-pandas.git
+cd expense-tracker-pandas
+pip install -r requirements.txt
+```
+
+## Usage
+
+```bash
+python main.py expenses.csv
+```
+
+With a chart:
+
+```bash
+python main.py expenses.csv --chart
+```
+
+Without an argument, it defaults to `expenses.csv` in the current folder:
+
+```bash
+python main.py
+```
+
+## CSV format
+
+Required columns: `Category`, `Amount`.
+Optional: `Date` (enables the monthly breakdown), `Description`.
 
 ```
 Date,Category,Amount,Description
@@ -23,60 +61,49 @@ Date,Category,Amount,Description
 2026-01-06,Transport,10.00,Bus ticket
 ```
 
-Running the script produces:
+## How it's structured
 
 ```
-Expenses by category:
-
-Utilities       95.00
-Food            93.45
-Entertainment   50.00
-Transport       15.00
-
-Total: 253.45
+expense-tracker-pandas/
+    expense_analyzer.py   core logic: loading, totals, chart generation
+    main.py                 CLI: argument parsing, printing, error handling
+    requirements.txt
+    expenses.csv             sample data
+    tests/
+        test_expense_analyzer.py
 ```
 
-## Installation
+`expense_analyzer.py` has no printing or CLI logic in it - it's a set of
+plain functions that take data in and return data out, which is what
+makes it possible to test without running the whole program.
+
+## Running the tests
 
 ```bash
-git clone https://github.com/ChrisMantelos/expense-tracker-pandas.git
-cd expense-tracker-pandas
-pip install pandas
+pip install -r requirements.txt
+pytest tests/ -v
 ```
 
-## Usage
+All 8 tests pass: a missing file, an empty file, missing required
+columns, correct category totals (verified against hand-computed
+values), correct monthly totals split by category, graceful handling
+when there's no Date column, and that the chart file actually gets
+written to disk.
 
-```bash
-python main.py
-```
+## Testing status
 
-By default it reads `expenses.csv` in the project folder. Swap in your own
-file with the same column structure and it works the same way.
-
-## CSV format
-
-Required columns: `Category`, `Amount`.
-Optional columns (present in the sample file, not required by the script):
-`Date`, `Description`.
-
-## How it works
-
-The whole calculation is a single pandas operation:
-
-```python
-df.groupby("Category")["Amount"].sum()
-```
-
-Everything else in the script is just reading the file, formatting the
-output, and printing the total.
+Fully tested end to end, not just unit tests in isolation: ran
+`python main.py expenses.csv --chart` directly and confirmed the
+printed totals matched the source data by hand, the monthly breakdown
+was correct, and the chart image was generated and renders correctly
+(shown above).
 
 ## Possible extensions
 
-- Accept the CSV path as a command-line argument instead of a hardcoded filename
-- Add a monthly breakdown, not just totals by category
-- Add a simple bar chart with matplotlib
-- Handle malformed rows instead of failing on them
+- Accept multiple CSV files and combine them
+- Export the summary to a new CSV instead of only printing it
+- A simple web UI (Streamlit) for uploading a CSV and viewing the chart interactively
 
 ## Tech stack
 
-Python, Pandas
+Python, Pandas, Matplotlib, pytest
